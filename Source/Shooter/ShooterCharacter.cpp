@@ -13,9 +13,22 @@
 
 // Sets default values
 AShooterCharacter::AShooterCharacter() :
+	// Base rates for turning/looking up
 	BaseTurnRate(45.f),
 	BaseLookUpRate(45.f),
+	// Turn rates for aiming/not aiming
+	HipTurnRate(90.f),
+	HipLookUpRate(90.f),
+	AimingTurnRate(20.f),
+	AimingLookUpRate(20.f),
+	// Mouse Look sensitivty scale factors
+	MouseHipTurnRate(1.f),
+	MouseHipLookUpRate(1.f),
+	MouseAimingTurnRate(0.2f),
+	MouseAimingLookUpRate(0.2f),
+	// true when aiming the weapon
 	bAiming(false),
+	// Camera field of view values
 	CameraDefaultFOV(0.f), // set in BeginPlay
 	CameraZoomedFOV(35.f),
 	CameraCurrentFOV(0.f),
@@ -67,6 +80,10 @@ void AShooterCharacter::Tick(float DeltaTime)
 
 	// Handle interpolation for zoom when aiming
 	CameraInterpZoom(DeltaTime);
+	// Change look sensitivty based on aiming
+	SetLookRates();
+	// Calculate crosshair spread multiplier
+	CalculateCrosshairSpread(DeltaTime);
 }
 
 // Called to bind functionality to input
@@ -80,8 +97,8 @@ void AShooterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 	PlayerInputComponent->BindAxis("MoveRight", this, &AShooterCharacter::MoveRight);
 	PlayerInputComponent->BindAxis("TurnRate", this, &AShooterCharacter::TurnAtRate);
 	PlayerInputComponent->BindAxis("LookUpRate", this, &AShooterCharacter::LookUpAtRate);
-	PlayerInputComponent->BindAxis("Turn", this, &APawn::AddControllerYawInput);
-	PlayerInputComponent->BindAxis("LookUp", this, &APawn::AddControllerPitchInput);
+	PlayerInputComponent->BindAxis("Turn", this, &AShooterCharacter::Turn);
+	PlayerInputComponent->BindAxis("LookUp", this, &AShooterCharacter::LookUp);
 
 	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
 	PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
@@ -265,4 +282,79 @@ void AShooterCharacter::CameraInterpZoom(float DeltaTime)
 		CameraCurrentFOV = FMath::FInterpTo(CameraCurrentFOV, CameraDefaultFOV, DeltaTime, ZoomInterpSpeed);
 	}
 	GetFollowCamera()->SetFieldOfView(CameraCurrentFOV);
+}
+
+void AShooterCharacter::SetLookRates()
+{
+	if (bAiming)
+	{
+		BaseTurnRate = AimingTurnRate;
+		BaseLookUpRate = AimingLookUpRate;
+	}
+	else
+	{
+		BaseTurnRate = HipTurnRate;
+		BaseLookUpRate = HipLookUpRate;
+	}
+}
+
+void AShooterCharacter::Turn(float Value)
+{
+	float TurnScaleFactor{};
+	if (bAiming)
+	{
+		TurnScaleFactor = MouseAimingTurnRate;
+	}
+	else
+	{
+		TurnScaleFactor = MouseHipTurnRate;
+	}
+
+	AddControllerYawInput(Value * TurnScaleFactor);
+}
+
+void AShooterCharacter::LookUp(float Value)
+{
+	float LookUpScaleFactor{};
+	if (bAiming)
+	{
+		LookUpScaleFactor = MouseAimingLookUpRate;
+	}
+	else
+	{
+		LookUpScaleFactor = MouseHipLookUpRate;
+	}
+
+	AddControllerPitchInput(Value * LookUpScaleFactor);
+}
+
+void AShooterCharacter::CalculateCrosshairSpread(float DeltaTime)
+{
+	FVector2D WalkSpeedRande { 0.f, 600.0f };
+	FVector2D VelocityMultiplierRange { 0.f, 1.f };
+	FVector Velocity {GetVelocity()};
+	Velocity.Z = 0.f;
+
+	// Calculate crosshairs velocity factor
+	CrosshairVelocityFactor = FMath::GetMappedRangeValueClamped(WalkSpeedRande, VelocityMultiplierRange, Velocity.Size());
+
+	// Calculate Crosshair in air factor
+	if (GetCharacterMovement()->IsFalling()) // is in air?
+	{
+		// Spread the crosshairs slowly while in air
+		CrosshairInAirFactor = FMath::FInterpTo(CrosshairInAirFactor, 2.25f, DeltaTime, 2.25f);
+	}
+	else // character in on the ground
+	{
+		// Shrink the crosshairs rapidly while on the ground
+		CrosshairInAirFactor = FMath::FInterpTo(CrosshairInAirFactor, 0.f, DeltaTime, 30.f);
+	}
+
+	CrosshairSpredMultiplier = 0.5f + CrosshairVelocityFactor + CrosshairInAirFactor;
+
+}
+
+float AShooterCharacter::GetCrosshairSpreadMultiplier() const
+{
+	return CrosshairSpredMultiplier;
 }
