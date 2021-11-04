@@ -32,7 +32,20 @@ AShooterCharacter::AShooterCharacter() :
 	CameraDefaultFOV(0.f), // set in BeginPlay
 	CameraZoomedFOV(35.f),
 	CameraCurrentFOV(0.f),
-	ZoomInterpSpeed(20.f)
+	ZoomInterpSpeed(20.f),
+	// Crosshair spread factors
+	CrosshairSpredMultiplier(0.f),
+	CrosshairVelocityFactor(0.f),
+	CrosshairInAirFactor(0.f),
+	CrosshairAimFactor(0.f),
+	CrosshairShootingFactor(0.f),
+	// bullet fire timer handle
+	ShootTimeDuration(0.05f),
+	bFiringBullet(false),
+	// Automatic fire variables
+	AutomaticFireRate(0.1f),
+	bShouldFire(true),
+	bFireButtonPressed(false)
 {
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
@@ -103,7 +116,8 @@ void AShooterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
 	PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
 
-	PlayerInputComponent->BindAction("FireButton", IE_Pressed, this, &AShooterCharacter::FireWeapon);
+	PlayerInputComponent->BindAction("FireButton", IE_Pressed, this, &AShooterCharacter::FireButtonPressed);
+	PlayerInputComponent->BindAction("FireButton", IE_Released, this, &AShooterCharacter::FireButtonReleased);
 
 	PlayerInputComponent->BindAction("AimingButton", IE_Pressed, this, &AShooterCharacter::AimingButtonPressed);
 	PlayerInputComponent->BindAction("AimingButton", IE_Released, this, &AShooterCharacter::AimingButtonReleased);
@@ -195,6 +209,9 @@ void AShooterCharacter::FireWeapon()
 		AnimInstance->Montage_Play(HipFireMontage);
 		AnimInstance->Montage_JumpToSection(FName("StartFire"));
 	}
+
+	// Start bullet fire timer for crosshairs 
+	StartCrosshairBulletFire();
 }
 
 bool AShooterCharacter::GetBeamEndLocation(const FVector& MuzzleSocketLocation, FVector& OutBeamLocation)
@@ -209,7 +226,7 @@ bool AShooterCharacter::GetBeamEndLocation(const FVector& MuzzleSocketLocation, 
 
 	// Get screen space location of crosshairs
 	FVector2D CrosshairLocation(ViewportSize.X / 2.f, ViewportSize.Y / 2.f);
-	CrosshairLocation.Y -= 50.f;
+	
 
 	FVector CrosshairWorldPosition;
 	FVector CrosshairWorldDirection;
@@ -350,11 +367,78 @@ void AShooterCharacter::CalculateCrosshairSpread(float DeltaTime)
 		CrosshairInAirFactor = FMath::FInterpTo(CrosshairInAirFactor, 0.f, DeltaTime, 30.f);
 	}
 
-	CrosshairSpredMultiplier = 0.5f + CrosshairVelocityFactor + CrosshairInAirFactor;
+	// Calculate crosshair aim factor
+	if (bAiming) // are we aiming
+	{
+		// Shrink crosshairs a small amaunt very quicly
+		CrosshairAimFactor = FMath::FInterpTo(CrosshairAimFactor, 0.6f, DeltaTime, 30.f);
+	}
+	else // not aiming
+	{
+		// spread crosshairs back to normal very quicly
+		CrosshairAimFactor = FMath::FInterpTo(CrosshairAimFactor, 0.f, DeltaTime, 30.f);
+	}
+
+	// true 0.05 sec after firing
+	if (bFiringBullet)
+	{
+		CrosshairShootingFactor = FMath::FInterpTo(CrosshairShootingFactor, 0.3f, DeltaTime, 60.f);
+	}
+	else
+	{
+		CrosshairShootingFactor = FMath::FInterpTo(CrosshairShootingFactor, 0.f, DeltaTime, 60.f);
+	}
+
+	CrosshairSpredMultiplier = 0.5f + CrosshairVelocityFactor + CrosshairInAirFactor - CrosshairAimFactor + CrosshairShootingFactor;
 
 }
 
 float AShooterCharacter::GetCrosshairSpreadMultiplier() const
 {
 	return CrosshairSpredMultiplier;
+}
+
+void AShooterCharacter::StartCrosshairBulletFire()
+{
+	bFiringBullet = true;
+
+	GetWorldTimerManager().SetTimer(CrosshairShootTimer, this, &AShooterCharacter::FinishCrosshairBulletFire, ShootTimeDuration);
+}
+
+void AShooterCharacter::FinishCrosshairBulletFire()
+{
+	bFiringBullet = false;
+}
+
+void AShooterCharacter::FireButtonPressed()
+{
+	bFireButtonPressed = true;
+
+	StartFireTimer();
+}
+
+void AShooterCharacter::FireButtonReleased()
+{
+	bFireButtonPressed = false;
+}
+
+void AShooterCharacter::StartFireTimer()
+{
+	if (bShouldFire)
+	{
+		FireWeapon();
+		bShouldFire = false;
+
+		GetWorldTimerManager().SetTimer(AutoFireTimer, this, &AShooterCharacter::AutoFireReset, AutomaticFireRate);
+	}
+}
+
+void AShooterCharacter::AutoFireReset()
+{
+	bShouldFire = true;
+
+	if (bFireButtonPressed)
+	{
+		StartFireTimer();
+	}
 }
