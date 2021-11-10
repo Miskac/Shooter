@@ -25,12 +25,16 @@ public:
 
 private:
 	// Skeletal Mesh for the item
-	UPROPERTY(VisibleAnywhere, BlueaprintReadOnly, Category = "Item Properties", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Item Properties", meta = (AllowPrivateAccess = "true"))
 	USkeletalMeshComponent* ItemMesh;
 
 	// Line trace colides with box to show HUD widgets
-	UPROPERTY(EditAnywhere, BlueaprintReadOnly, Category = "Item Properties", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Item Properties", meta = (AllowPrivateAccess = "true"))
 	class UBoxComponent* CollisionBox;
+
+	// Popup widget for when the player looks at the item
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Item Properties", meta = (AllowPrivateAccess = "true"))
+	class UWidgetComponent* PickupWidget;
 
 public:
 
