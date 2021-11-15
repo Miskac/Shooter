@@ -47,7 +47,9 @@ AShooterCharacter::AShooterCharacter() :
 	// Automatic fire variables
 	AutomaticFireRate(0.1f),
 	bShouldFire(true),
-	bFireButtonPressed(false)
+	bFireButtonPressed(false),
+	// Item Trace variables
+	bShouldTraceForItems(false)
 {
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
@@ -100,19 +102,8 @@ void AShooterCharacter::Tick(float DeltaTime)
 	// Calculate crosshair spread multiplier
 	CalculateCrosshairSpread(DeltaTime);
 
-	FHitResult ItemTraceResult;
-	FVector HitLocation;
-	TraceUnderCrosshairds(ItemTraceResult, HitLocation);
-	if (ItemTraceResult.bBlockingHit)
-	{
-		AItem* HitItem = Cast<AItem>(ItemTraceResult.Actor);
-
-		if (HitItem && HitItem->GetPickupWidget())
-		{
-			// Show items pickup widget
-			HitItem->GetPickupWidget()->SetVisibility(true);
-		}
-	}
+	// Check overlapped item count, then trace for items
+	TraceForItems();
 }
 
 // Called to bind functionality to input
@@ -469,4 +460,58 @@ bool AShooterCharacter::TraceUnderCrosshairds(FHitResult& OutHitResult, FVector&
 	}
 
 	return false;
+}
+
+void AShooterCharacter::IncrementOverlappedItemCount (int8 Amount)
+{
+	if (OverlappedItemCount + Amount <= 0)
+	{
+		OverlappedItemCount = 0;
+		bShouldTraceForItems = false;
+	}
+	else
+	{
+		OverlappedItemCount += Amount;
+		bShouldTraceForItems = true;
+	}
+}
+
+void AShooterCharacter::TraceForItems()
+{
+	if (bShouldTraceForItems)
+	{
+		FHitResult ItemTraceResult;
+		FVector HitLocation;
+		TraceUnderCrosshairds(ItemTraceResult, HitLocation);
+		if (ItemTraceResult.bBlockingHit)
+		{
+			AItem* HitItem = Cast<AItem>(ItemTraceResult.Actor);
+
+			if (HitItem && HitItem->GetPickupWidget())
+			{
+				// Show items pickup widget
+				HitItem->GetPickupWidget()->SetVisibility(true);
+			}
+
+			// We hit an AItem last frame 
+			if (TraceHitItemLastFrame)
+			{
+				if (HitItem != TraceHitItemLastFrame)
+				{
+					// We are hitting a different AItem this frame from last frame
+					// Or AItem is null
+					TraceHitItemLastFrame->GetPickupWidget()->SetVisibility(false);
+				}
+			}
+
+			// Store a refrence to HitItem for next frame
+			TraceHitItemLastFrame = HitItem;
+		}
+	}
+	else if (TraceHitItemLastFrame)
+	{
+		// No longer overlapping any items
+		// Item last frame should not show widget
+		TraceHitItemLastFrame->GetPickupWidget()->SetVisibility(false);
+	}
 }
