@@ -90,6 +90,9 @@ protected:
 	void SelectButtonPressed();
 	void SelectButtonReleased();
 
+	// Drops currently equipped weapon and equipps trace hit item
+	void SwapWeapon(AWeapon* WeaponToSwap);
+
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
@@ -238,6 +241,10 @@ private:
 	// Set this in Blueprints for the default weapon class
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Combat, meta = (AllowPrivateAccess = "true"))
 	TSubclassOf<AWeapon> DefaultWeaponClass;
+
+	// The item currently hit by our trace in trace for items (could be null)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Combat, meta = (AllowPrivateAccess = "true"))
+	AItem* TraceHitItem;
 
 public:
 	// Returns CameraBoom Subobject
