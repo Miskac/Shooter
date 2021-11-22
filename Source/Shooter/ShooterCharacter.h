@@ -6,6 +6,15 @@
 #include "GameFramework/Character.h"
 #include "ShooterCharacter.generated.h"
 
+UENUM(BlueprintType)
+enum class EAmmoType : uint8
+{
+	EAT_9mm UMETA(DisplayName = "9mm"),
+	EAT_AR UMETA(DisplayName = "AssultRifle"),
+
+	EAT_MAX UMETA(DisplayName = "DefaultMAX")
+};
+
 UCLASS()
 class SHOOTER_API AShooterCharacter : public ACharacter
 {
@@ -92,6 +101,9 @@ protected:
 
 	// Drops currently equipped weapon and equipps trace hit item
 	void SwapWeapon(AWeapon* WeaponToSwap);
+
+	// Initilize ammo map with ammo values
+	void InitializeAmmoMap();
 
 public:	
 	// Called every frame
@@ -252,6 +264,16 @@ private:
 	// Distance upward from the camera fro the interp desitnation
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Items, meta = (AllowPrivateAccess = "true"))
 	float CameraInterpElevation;
+
+	// Map to keep track of ammo of the different ammo types
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Items, meta = (AllowPrivateAccess = "true"))
+	TMap<EAmmoType, int32> AmmoMap;
+	// Strating amount of 9mm ammo
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Items, meta = (AllowPrivateAccess = "true"))
+	int32 Starting9mmAmmo;
+	// Strating amount of AR ammo
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Items, meta = (AllowPrivateAccess = "true"))
+	int32 StartingARAmmo;
 
 public:
 	// Returns CameraBoom Subobject
