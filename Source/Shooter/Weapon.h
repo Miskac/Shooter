@@ -30,8 +30,17 @@ private:
 	float ThrowWeaponTime;
 	bool bFalling;
 
+	// Ammo count for this weapon
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Propertys", meta = (AllowPrivateAccess = "true"))
+	int32 Ammo;
+
 public:
 	// Adds an impulse to the waepon
 	void ThrowWeapon();
+
+	FORCEINLINE int32 GetAmmo() const { return Ammo; };
+
+	// Called from Character class when fireing weapon
+	void DecrementAmmo();
 
 };
