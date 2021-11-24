@@ -4,15 +4,18 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "AmmoType.h"
 #include "ShooterCharacter.generated.h"
 
-UENUM(BlueprintType)
-enum class EAmmoType : uint8
-{
-	EAT_9mm UMETA(DisplayName = "9mm"),
-	EAT_AR UMETA(DisplayName = "AssultRifle"),
 
-	EAT_MAX UMETA(DisplayName = "DefaultMAX")
+UENUM(BlueprintType)
+enum class ECombatState : uint8
+{
+	ECS_Unoccupied UMETA(DisplayName = "Unoccupied"),
+	ECS_FireTimerInProgress UMETA(DisplayName = "FireTimerInProgress"),
+	ECS_Reloading UMETA(DisplayName = "Reloading"),
+
+	ECS_MAX UMETA(DisplayName = "DefaultMAX")
 };
 
 UCLASS()
@@ -107,6 +110,20 @@ protected:
 
 	// Chechk to make sure our weapon has ammo
 	bool WeaponHasAmmo();
+	// FireWeapon funtions
+	void PlayFireSound();
+	void SendBullet();
+	void PlayGunfireMontage();
+	// Bound to the r key and game pad face button left
+	void ReloadButtonPressed();
+	// Handle reloading of the weapon
+	void ReloadWeapon();
+
+	UFUNCTION(BlueprintCallable)
+	void FinishReloading();
+
+	// Checks to see if we have ammo of the Equipped Weapon weapon type
+	bool CarryingAmmo();
 
 public:	
 	// Called every frame
@@ -277,6 +294,14 @@ private:
 	// Strating amount of AR ammo
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Items, meta = (AllowPrivateAccess = "true"))
 	int32 StartingARAmmo;
+
+	// Combat state can only fire or reload if unoccupied
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Combat, meta = (AllowPrivateAccess = "true"))
+	ECombatState CombatState;
+
+	// Montage for Realod animations
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Combat, meta = (AllowPrivateAccess = "true"))
+	UAnimMontage* ReloadMontage;
 
 public:
 	// Returns CameraBoom Subobject
