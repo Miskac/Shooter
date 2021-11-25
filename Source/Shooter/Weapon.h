@@ -41,19 +41,22 @@ private:
 	bool bFalling;
 
 	// Ammo count for this weapon
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Propertys", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Properties", meta = (AllowPrivateAccess = "true"))
 	int32 Ammo;
+	// Maximum ammo that our weapon can hold
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Properties", meta = (AllowPrivateAccess = "true"))
+	int32 MagazineCapacity;
 
 	// The Type of weapon
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Propertys", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Properties", meta = (AllowPrivateAccess = "true"))
 	EWeaponType WeaponType;
 
 	// The type of ammo
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Propertys", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Properties", meta = (AllowPrivateAccess = "true"))
 	EAmmoType AmmoType;
 
 	// FName for the reload montage section
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Propertys", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Properties", meta = (AllowPrivateAccess = "true"))
 	FName ReloadMontageSection;
 
 public:
@@ -61,6 +64,7 @@ public:
 	void ThrowWeapon();
 
 	FORCEINLINE int32 GetAmmo() const { return Ammo; };
+	FORCEINLINE int32 GetMagazineCapacity() const { return MagazineCapacity; };
 
 	// Called from Character class when fireing weapon
 	void DecrementAmmo();
@@ -70,5 +74,7 @@ public:
 	FORCEINLINE EAmmoType GetAmmoType() const { return AmmoType; }; 
 
 	FORCEINLINE FName GetReloadMontageSection() const { return ReloadMontageSection; };
+
+	void ReloadAmmo(int32 Amount);
 
 };
