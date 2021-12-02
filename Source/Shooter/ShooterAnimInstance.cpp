@@ -15,7 +15,9 @@ UShooterAnimInstance::UShooterAnimInstance() :
     bAiming(false),
     CharacterYaw(0.f),
     CharacterYawLastFrame(0.f),
-    RootYawOffset(0.f)
+    RootYawOffset(0.f),
+    Pitch(0.f),
+    bReloading(false)
 {
 
 }
@@ -29,6 +31,8 @@ void UShooterAnimInstance::UpdateAnimationProperties(float DeltaTime)
 
     if (ShooterCharacter)
     {
+        bReloading = ShooterCharacter->GetCombatState() == ECombatState::ECS_Reloading;
+
         // Get the latheral Speed of the character from velocity
         FVector Velocity {ShooterCharacter->GetVelocity()};
         Velocity.Z = 0;
@@ -80,9 +84,17 @@ void UShooterAnimInstance::NativeInitializeAnimation()
 void UShooterAnimInstance::TurnInPlace()
 {
     if (ShooterCharacter == nullptr) return;
+
+    Pitch = ShooterCharacter->GetBaseAimRotation().Pitch;
+
     if (Speed > 0)
     {
         // Dont want to turn in place character is moving
+        RootYawOffset = 0.f;
+        CharacterYaw = ShooterCharacter->GetActorRotation().Yaw;
+        CharacterYawLastFrame = CharacterYaw;
+        RotationCurveLastFrame = 0.f;
+        RotationCurve = 0.f;
     }
     else
     {
@@ -90,9 +102,37 @@ void UShooterAnimInstance::TurnInPlace()
         CharacterYaw = ShooterCharacter->GetActorRotation().Yaw;
         const float YawDelta { CharacterYaw - CharacterYawLastFrame };
 
-        RootYawOffset -= YawDelta;
+        // Root Yaw Offset updated and clamed to [-180, 180]
+        RootYawOffset = UKismetMathLibrary::NormalizeAxis(RootYawOffset - YawDelta);
 
-        if (GEngine) GEngine->AddOnScreenDebugMessage(1, -1, FColor::Blue, FString::Printf(TEXT("CharcaterYaw: %f"), CharacterYaw));
-        if (GEngine) GEngine->AddOnScreenDebugMessage(2, -1, FColor::Red, FString::Printf(TEXT("RootYawOffset: %f"), RootYawOffset));
+        // 1.0 if turning 0.0 if not
+       const float Turning { GetCurveValue(TEXT("Turning")) };
+       if (Turning > 0)
+       {
+            RotationCurveLastFrame = RotationCurve;
+            RotationCurve = GetCurveValue(TEXT("Rotation"));
+
+            const float DeltaRotation { RotationCurve - RotationCurveLastFrame };
+
+            // If root yaw offset is positive it means we are turning left if it less then 0 it means we are tunirng right
+            if  (RootYawOffset > 0)
+            {
+                RootYawOffset -= DeltaRotation;
+            }
+            else 
+            {
+                RootYawOffset += DeltaRotation;
+            }
+            // This is the same as the if statement
+            // RootYawOffset > 0 ? RootYawOffset -= DeltaRotation : RootYawOffset += DeltaRotation;
+
+            const float ABSRootYawOffset { FMath::Abs(RootYawOffset) };
+            if (ABSRootYawOffset > 90.f)
+            {
+                const float YawExcess { ABSRootYawOffset - 90.f };
+
+                RootYawOffset > 0 ? RootYawOffset -= YawExcess : RootYawOffset += YawExcess;
+            }
+       }
     }
 }

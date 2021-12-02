@@ -61,4 +61,15 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Turn In Place", meta = (AllowPrivateAccess = "true"))
 	float RootYawOffset;
 
+	// Rotation curve value this frame
+	float RotationCurve;
+	// Rotation curve value last frame
+	float RotationCurveLastFrame;
+	// The pitch of the aim rotation used for aim offset
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Turn In Place", meta = (AllowPrivateAccess = "true"))
+	float Pitch;
+	// true when reloading used to prevent aim offset while reloading
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Turn In Place", meta = (AllowPrivateAccess = "true"))
+	bool bReloading;
+
 };
