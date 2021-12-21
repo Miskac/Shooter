@@ -15,6 +15,7 @@
 #include "Weapon.h"
 #include "Components/SphereComponent.h"
 #include "Components/BoxComponent.h"
+#include "Components/CapsuleComponent.h"
 
 // Sets default values
 AShooterCharacter::AShooterCharacter() :
@@ -29,13 +30,13 @@ AShooterCharacter::AShooterCharacter() :
 	// Mouse Look sensitivty scale factors
 	MouseHipTurnRate(1.f),
 	MouseHipLookUpRate(1.f),
-	MouseAimingTurnRate(0.2f),
-	MouseAimingLookUpRate(0.2f),
+	MouseAimingTurnRate(0.6f),
+	MouseAimingLookUpRate(0.6f),
 	// true when aiming the weapon
 	bAiming(false),
 	// Camera field of view values
 	CameraDefaultFOV(0.f), // set in BeginPlay
-	CameraZoomedFOV(35.f),
+	CameraZoomedFOV(30.f),
 	CameraCurrentFOV(0.f),
 	ZoomInterpSpeed(20.f),
 	// Crosshair spread factors
@@ -61,7 +62,13 @@ AShooterCharacter::AShooterCharacter() :
 	StartingARAmmo(120),
 	// Combat variables
 	CombatState(ECombatState::ECS_Unoccupied),
-	bCrouching(false)
+	bCrouching(false),
+	BaseMovementSpeed(650.f),
+	CrouchMovementSpeed(300.f),
+	StandingCapsuleHalfHight(88.f),
+	CrouchingCapsuleHalfHight(44.f),
+	BaseGroundFriction(2.f),
+	CrouchingGroundFriction(100.f)
 {
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
@@ -107,6 +114,8 @@ void AShooterCharacter::BeginPlay()
 	EquipWeapon(SpawnDefaultWeapon());
 
 	InitializeAmmoMap();
+
+	GetCharacterMovement()->MaxWalkSpeed = BaseMovementSpeed;
 }
 
 // Called every frame
@@ -123,6 +132,9 @@ void AShooterCharacter::Tick(float DeltaTime)
 
 	// Check overlapped item count, then trace for items
 	TraceForItems();
+
+	// Interpolate the capsule halfhight based on croughing/standing
+	InterpCapsuleHalfHight(DeltaTime);
 }
 
 // Called to bind functionality to input
@@ -139,7 +151,7 @@ void AShooterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 	PlayerInputComponent->BindAxis("Turn", this, &AShooterCharacter::Turn);
 	PlayerInputComponent->BindAxis("LookUp", this, &AShooterCharacter::LookUp);
 
-	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
+	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &AShooterCharacter::Jump);
 	PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
 
 	PlayerInputComponent->BindAction("FireButton", IE_Pressed, this, &AShooterCharacter::FireButtonPressed);
@@ -779,4 +791,53 @@ void AShooterCharacter::CrouchButtonPressed()
 	{
 		bCrouching = !bCrouching;
 	}
+
+	if (bCrouching)
+	{
+		GetCharacterMovement()->MaxWalkSpeed = CrouchMovementSpeed;
+		GetCharacterMovement()->GroundFriction = CrouchingGroundFriction;
+	}
+	else
+	{
+		GetCharacterMovement()->MaxWalkSpeed = BaseMovementSpeed;
+		GetCharacterMovement()->GroundFriction = BaseGroundFriction;
+	}
+}
+
+void AShooterCharacter::Jump()
+{
+	if (bCrouching)
+	{
+		bCrouching = false;
+		GetCharacterMovement()->MaxWalkSpeed = BaseMovementSpeed;
+	}
+	else
+	{
+		ACharacter::Jump();
+	}
+}
+
+void AShooterCharacter::InterpCapsuleHalfHight(float DeltaTime)
+{
+	float TargetCapsuleHalfHight {};
+
+	if (bCrouching)
+	{
+		TargetCapsuleHalfHight = CrouchingCapsuleHalfHight;
+	}
+	else
+	{
+		TargetCapsuleHalfHight = StandingCapsuleHalfHight;
+	}
+
+	const float InterpHalfHight { FMath::FInterpTo(GetCapsuleComponent()->GetScaledCapsuleHalfHeight(), TargetCapsuleHalfHight, DeltaTime, 20.f) };
+
+	// Negative value if crouching positive value if standing
+	const float DeltaCapsuleHalfHight { InterpHalfHight - GetCapsuleComponent()->GetScaledCapsuleHalfHeight() };
+
+	const FVector MeshOffset {0.f, 0.f, -DeltaCapsuleHalfHight }; 
+
+	GetMesh()->AddLocalOffset(MeshOffset);
+
+	GetCapsuleComponent()->SetCapsuleHalfHeight(InterpHalfHight);
 }

@@ -134,6 +134,11 @@ protected:
 
 	void CrouchButtonPressed();
 
+	virtual void Jump() override;
+
+	// Interps capsule half hight when crouching/standing
+	void InterpCapsuleHalfHight(float DeltaTime);
+
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
@@ -215,9 +220,11 @@ private:
 	bool bAiming;
 
 	// Defaunt camera field of view camera
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Combat, meta = (AllowPrivateAccess = "true"))
 	float CameraDefaultFOV;
 
 	// Field of view value for when zoomed in
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Combat, meta = (AllowPrivateAccess = "true"))
 	float CameraZoomedFOV;
 
 	// Current field of view this frame
@@ -323,6 +330,29 @@ private:
 	// True when crouching
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = "true"))
 	bool bCrouching;
+
+	// Regular movemet speed
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = "true"))
+	float BaseMovementSpeed;
+	// Crouch movement speed
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = "true"))
+	float CrouchMovementSpeed;
+
+	// Current half hight of the capsule
+	float CurrentCapsuleHalfHight;
+	// Half hight of the capsule when not crouching
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Movement, meta = (AllowPrivateAccess = "true"))
+	float StandingCapsuleHalfHight;
+	// Half hight of the capsule when crouching
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Movement, meta = (AllowPrivateAccess = "true"))
+	float CrouchingCapsuleHalfHight;
+	
+	// Ground frinction while not crouching
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Movement, meta = (AllowPrivateAccess = "true"))
+	float BaseGroundFriction;
+	// Ground friction while crouching
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Movement, meta = (AllowPrivateAccess = "true"))
+	float CrouchingGroundFriction;
 
 public:
 	// Returns CameraBoom Subobject
