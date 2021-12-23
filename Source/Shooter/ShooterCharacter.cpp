@@ -16,6 +16,7 @@
 #include "Components/SphereComponent.h"
 #include "Components/BoxComponent.h"
 #include "Components/CapsuleComponent.h"
+#include "Ammo.h"
 
 // Sets default values
 AShooterCharacter::AShooterCharacter() :
@@ -618,6 +619,12 @@ void AShooterCharacter::GetPickupItem(AItem* Item)
 	{
 		SwapWeapon(Weapon);
 	}
+
+	auto Ammo = Cast<AAmmo>(Item);
+	if (Ammo)
+	{
+		PickupAmmo(Ammo);
+	}
 }
 
 void AShooterCharacter::InitializeAmmoMap()
@@ -874,4 +881,28 @@ void AShooterCharacter::StopAiming()
 	{
 		GetCharacterMovement()->MaxWalkSpeed = BaseMovementSpeed;
 	}
+}
+
+void AShooterCharacter::PickupAmmo(class AAmmo* Ammo)
+{
+	// Chechk to see if ammo map contains ammos amo type
+	if (AmmoMap.Find(Ammo->GetAmmoType()))
+	{
+		// Get amount of ammo in out ammo map for ammo type
+		int32 AmmoCount {AmmoMap[Ammo->GetAmmoType()]};
+		AmmoCount += Ammo->GetItemCount();
+		// Set the Amount of ammo in the map for this type
+		AmmoMap[Ammo->GetAmmoType()] = AmmoCount;
+	}
+
+	if (EquippedWeapon->GetAmmoType() == Ammo->GetAmmoType())
+	{
+		// Check to se if gun is empty
+		if (EquippedWeapon->GetAmmo() == 0)
+		{
+			ReloadWeapon();
+		}
+	}
+
+	Ammo->Destroy();
 }

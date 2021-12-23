@@ -55,7 +55,7 @@ protected:
 	void SetActiveStars();
 
 	// Sets propertys of the items components based on state
-	void SetItemProperties(EItemState State);
+	virtual void SetItemProperties(EItemState State);
 
 	// Called when item interp timer is finished
 	void FinishInterping();
@@ -156,6 +156,7 @@ public:
 	FORCEINLINE USkeletalMeshComponent* GetItemMesh() const { return ItemMesh; };
 	FORCEINLINE USoundCue* GetPickupSound() const { return PickupSound; };
 	FORCEINLINE USoundCue* GetEquipSound() const { return EquipSound; };
+	FORCEINLINE int32 GetItemCount() const { return ItemCount; };
 	// Called from the ASHooterCharacter class
 	void StartItemCurve(AShooterCharacter* Char);
 
