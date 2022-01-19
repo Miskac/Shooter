@@ -99,7 +99,30 @@ AShooterCharacter::AShooterCharacter() :
 	GetCharacterMovement()->AirControl = 0.2f;
 
 	// Create Hand scene component
-	HandSceneComponent = CreateDefaultSubobject<USceneComponent>(TEXT("HandSceneComp"));
+	HandSceneComponent = CreateDefaultSubobject<USceneComponent>(TEXT("Hand Scene Comp"));
+
+	// Create interpolation components
+	WeaponInterpComp = CreateDefaultSubobject<USceneComponent>(TEXT("Weapon Interpolation Component"));
+	WeaponInterpComp->SetupAttachment(GetFollowCamera());
+
+	InterpComp1 = CreateDefaultSubobject<USceneComponent>(TEXT("Interpolation Component 1"));
+	InterpComp1->SetupAttachment(GetFollowCamera());
+
+	InterpComp2 = CreateDefaultSubobject<USceneComponent>(TEXT("Interpolation Component 2"));
+	InterpComp2->SetupAttachment(GetFollowCamera());
+
+	InterpComp3 = CreateDefaultSubobject<USceneComponent>(TEXT("Interpolation Component 3"));
+	InterpComp3->SetupAttachment(GetFollowCamera());
+
+	InterpComp4 = CreateDefaultSubobject<USceneComponent>(TEXT("Interpolation Component 4"));
+	InterpComp4->SetupAttachment(GetFollowCamera());
+
+	InterpComp5 = CreateDefaultSubobject<USceneComponent>(TEXT("Interpolation Component 5"));
+	InterpComp5->SetupAttachment(GetFollowCamera());
+
+	InterpComp6 = CreateDefaultSubobject<USceneComponent>(TEXT("Interpolation Component 6"));
+	InterpComp6->SetupAttachment(GetFollowCamera());
+
 }
 
 // Called when the game starts or when spawned
@@ -578,11 +601,6 @@ void AShooterCharacter::SelectButtonPressed()
 	if (TraceHitItem)
 	{
 		TraceHitItem->StartItemCurve(this);
-
-		if (TraceHitItem->GetPickupSound())
-		{
-			UGameplayStatics::PlaySound2D(this, TraceHitItem->GetPickupSound());
-		}
 	}
 }
 
