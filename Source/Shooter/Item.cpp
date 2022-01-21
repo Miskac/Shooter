@@ -23,7 +23,9 @@ AItem::AItem():
 	bInterping(false),
 	ItemInterpX(0.f),
 	ItemInterpY(0.f),
-	InterpInitialYawOffset(0.f)
+	InterpInitialYawOffset(0.f),
+	ItemType(EItemType::EIT_MAX),
+	InterpLocIndex(0)
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
@@ -213,10 +215,12 @@ void AItem::StartItemCurve(AShooterCharacter* Char)
 	// Store a handle to the charcter
 	Character = Char;
 
-	if (PickupSound)
-	{
-		UGameplayStatics::PlaySound2D(this, PickupSound);
-	}
+	// Get array index in InterpLocations with the lowest item count
+	InterpLocIndex = Character->GetInterpLocationIndex();
+	// Add 1 to the item count for this interp location struct
+	Character->IncrementInterpLocItemCount(InterpLocIndex, 1);
+
+	PlayPickupSound();
 	// Store initial location of the item
 	ItemInterpStartLocation = GetActorLocation();
 	bInterping = true;
@@ -238,6 +242,8 @@ void AItem::FinishInterping()
 	bInterping = false;
 	if (Character)
 	{
+		// Subtract 1 from the item count of the interp location struct
+		Character->IncrementInterpLocItemCount(InterpLocIndex, -1);
 		Character->GetPickupItem(this);
 	}
 	// Set scale back to normal
@@ -257,7 +263,8 @@ void AItem::ItemInterp(float DeltaTime)
 		// Get the items initial location when the curve started
 		FVector ItemLocation = ItemInterpStartLocation;
 		// Get Location in front of the camera
-		const FVector CameraInterpLocation {Character->GetCameraInterpLocation()};
+		const FVector CameraInterpLocation { GetInterpLocation() };
+
 		// Vector from item to camera interp location X and Y are zeroed out
 		const FVector ItemToCamera {FVector (0.f, 0.f, (CameraInterpLocation - ItemLocation).Z)};
 		// Scale facotr to multiply with the curve value
@@ -289,6 +296,55 @@ void AItem::ItemInterp(float DeltaTime)
 			const float ScaleCurveValue = ItemScaleCurve->GetFloatValue(ElapsedTime);
 
 			SetActorScale3D(FVector(ScaleCurveValue, ScaleCurveValue, ScaleCurveValue));
+		}
+	}
+}
+
+FVector AItem::GetInterpLocation()
+{
+	if (Character == nullptr) return FVector(0.f);
+
+	switch (ItemType)
+	{
+	case EItemType::EIT_Ammo:
+		return Character->GetInterpLocation(InterpLocIndex).SceneComponent->GetComponentLocation();
+		break;
+	case EItemType::EIT_Weapon:
+		return Character->GetInterpLocation(0).SceneComponent->GetComponentLocation();
+		break;
+	}
+
+	return FVector();
+}
+
+void AItem::PlayPickupSound()
+{
+	if (Character)
+	{
+		if (Character->ShouldPlayPickupSound())
+		{
+			Character->StartPickupSoundTimer();
+
+			if (PickupSound)
+			{
+				UGameplayStatics::PlaySound2D(this, PickupSound);
+			}
+		}
+	}
+}
+
+void AItem::PlayEquipSound()
+{
+	if (Character)
+	{
+		if (Character->ShouldPlayEquipSound())
+		{
+			Character->StartEquipSoundTimer();
+
+			if (EquipSound)
+			{
+				UGameplayStatics::PlaySound2D(this, EquipSound);
+			}
 		}
 	}
 }

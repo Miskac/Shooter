@@ -18,6 +18,20 @@ enum class ECombatState : uint8
 	ECS_MAX UMETA(DisplayName = "DefaultMAX")
 };
 
+USTRUCT(BlueprintType)
+struct FInterpLocation
+{
+	GENERATED_BODY()
+
+	// Scene component to use for its location for interping
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	USceneComponent* SceneComponent;
+
+	// Number of items interping to/at this scene comp location
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	int32 ItemCount;
+};
+
 UCLASS()
 class SHOOTER_API AShooterCharacter : public ACharacter
 {
@@ -143,6 +157,12 @@ protected:
 	void StopAiming();
 
 	void PickupAmmo(class AAmmo* Ammo);
+
+	void InitializeInterpLocations();
+
+	void ResetPickupSoundTimer();
+
+	void ResetEquipSoundTimer();
 
 public:	
 	// Called every frame
@@ -379,6 +399,23 @@ private:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	USceneComponent* InterpComp6;
 
+	// Array of iterp location structs
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	TArray<FInterpLocation> InterpLocations;
+
+	FTimerHandle PickupSoundTimer;
+	FTimerHandle EquipSoundTimer;
+
+	bool bShouldPlayPickupSound;
+	bool bShouldPlayEquipSound;
+
+	// Time to weit before we can play another pickup sound
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Items, meta = (AllowPrivateAccess = "true"))
+	float PickupSoundResetTime;
+	// Time to weit before we can play another equip sound
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Items, meta = (AllowPrivateAccess = "true"))
+	float EquipSoundResetTime;
+
 public:
 	// Returns CameraBoom Subobject
 	FORCEINLINE USpringArmComponent* GetCameraBoom() const { return CameraBoom; };
@@ -395,12 +432,28 @@ public:
 	// Adds/subtracts to/from OverlappedItemCount and updates bShouldTraceForITems
 	void IncrementOverlappedItemCount (int8 Amount);
 
-	FVector GetCameraInterpLocation();
+	// No longer needed AItem has get interp location
+	// FVector GetCameraInterpLocation();
 
 	void GetPickupItem(AItem* Item);
 
 	FORCEINLINE ECombatState GetCombatState() const { return CombatState; };
 
 	FORCEINLINE bool GetCrouching () const { return bCrouching; };
+
+	FInterpLocation GetInterpLocation(int32 Index);
+
+	// Returns index in InterpLocations array with the lowest item count
+	int32 GetInterpLocationIndex();
+
+	void IncrementInterpLocItemCount(int32 Index, int32 Amount);
+
+	FORCEINLINE bool ShouldPlayPickupSound() const { return bShouldPlayPickupSound; };
+
+	FORCEINLINE bool ShouldPlayEquipSound() const { return bShouldPlayEquipSound; };
+
+	void StartPickupSoundTimer();
+
+	void StartEquipSoundTimer();
 
 };
