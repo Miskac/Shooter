@@ -77,6 +77,8 @@ protected:
 
 	void PlayPickupSound();
 
+	virtual void InitializeCustomDepth();
+
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
@@ -183,5 +185,7 @@ public:
 	void StartItemCurve(AShooterCharacter* Char);
 	// Called in AShooter charater GetPickupItem
 	void PlayEquipSound();
+	virtual void EnableCustomDepth();
+	virtual void DisableCustomDepth();
 
 };
