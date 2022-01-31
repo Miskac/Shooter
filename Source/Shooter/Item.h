@@ -79,6 +79,16 @@ protected:
 
 	virtual void InitializeCustomDepth();
 
+	virtual void OnConstruction(const FTransform& Transform) override;
+
+	void EnableGlowMaterial();
+
+	void ResetPulseTimer();
+
+	void StartPulseTimer();
+
+	void UpdatePulse();
+
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
@@ -170,6 +180,39 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Item Properties", meta = (AllowPrivateAccess = "true"))
 	int32 InterpLocIndex;
 
+	// Index for the meterial we would like to change at run time
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item Properties", meta = (AllowPrivateAccess = "true"))
+	int32 MaterialIndex;
+
+	// Dynamic instance that we can change at run time
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Item Properties", meta = (AllowPrivateAccess = "true"))
+	UMaterialInstanceDynamic* DynamicMaterialInstance;
+
+	// Material instance used with the dynamic material instance
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item Properties", meta = (AllowPrivateAccess = "true"))
+	UMaterialInstance* MaterialInstance;
+
+	bool bCanChangeCustomDepth;
+
+	// Curve to drive the dynamic material parameters
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Item Properties", meta = (AllowPrivateAccess = "true"))
+	class UCurveVector* PulseCurve;
+
+	FTimerHandle PulseTimer;
+
+	// Time for the pulse timer
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Item Properties", meta = (AllowPrivateAccess = "true"))
+	float PulseCurveTime;
+
+	UPROPERTY(VisibleAnywhere, Category = "Item Properties", meta = (AllowPrivateAccess = "true"))
+	float GlowAmount;
+
+	UPROPERTY(VisibleAnywhere, Category = "Item Properties", meta = (AllowPrivateAccess = "true"))
+	float FresnelExponent;
+
+	UPROPERTY(VisibleAnywhere, Category = "Item Properties", meta = (AllowPrivateAccess = "true"))
+	float FresnelRefractFraction;
+
 public:
 
 	FORCEINLINE UWidgetComponent* GetPickupWidget() const { return PickupWidget; };
@@ -187,5 +230,6 @@ public:
 	void PlayEquipSound();
 	virtual void EnableCustomDepth();
 	virtual void DisableCustomDepth();
+	void DisableGlowMaterial();
 
 };
