@@ -243,6 +243,8 @@ void AItem::StartItemCurve(AShooterCharacter* Char)
 
 	SetItemState(EItemState::EIS_EquipInterping);
 
+	GetWorldTimerManager().ClearTimer(PulseTimer);
+
 	GetWorldTimerManager().SetTimer(ItemInterpTimer, this, &AItem::FinishInterping, ZCurveTime);
 
 	// Get initial yaw of the camera
@@ -263,6 +265,7 @@ void AItem::FinishInterping()
 		// Subtract 1 from the item count of the interp location struct
 		Character->IncrementInterpLocItemCount(InterpLocIndex, -1);
 		Character->GetPickupItem(this);
+		SetItemState(EItemState::EIS_Pickedup);
 	}
 	// Set scale back to normal
 	SetActorScale3D(FVector(1.f));
@@ -433,17 +436,32 @@ void AItem::StartPulseTimer()
 
 void AItem::UpdatePulse()
 {
-	if (ItemState != EItemState::EIS_Pickup) return;
+	float ElapsedTime {};
+	FVector CurveValue {};
 
-	const float ElapsedTime {GetWorldTimerManager().GetTimerElapsed(PulseTimer)};
+	switch (ItemState)
+	{	
+		case EItemState::EIS_Pickup:
+			if (PulseCurve)
+			{
+				ElapsedTime = GetWorldTimerManager().GetTimerElapsed(PulseTimer);
+				CurveValue = PulseCurve->GetVectorValue(ElapsedTime);
+			}
+			break;
 
-	if (PulseCurve)
+		case EItemState::EIS_EquipInterping:
+			if (InterpPulseCurve)
+			{
+				ElapsedTime = GetWorldTimerManager().GetTimerElapsed(ItemInterpTimer);
+				CurveValue = InterpPulseCurve->GetVectorValue(ElapsedTime);
+			}
+			break;
+	}
+
+	if (DynamicMaterialInstance)
 	{
-		const FVector CurveValue {PulseCurve->GetVectorValue(ElapsedTime)};
-
 		DynamicMaterialInstance->SetScalarParameterValue(TEXT("GlowAmount"), CurveValue.X * GlowAmount);
 		DynamicMaterialInstance->SetScalarParameterValue(TEXT("FresnelExponent"), CurveValue.Y * FresnelExponent);
 		DynamicMaterialInstance->SetScalarParameterValue(TEXT("FresnelReflectFraction"), CurveValue.Z * FresnelRefractFraction);
 	}
-	
 }
