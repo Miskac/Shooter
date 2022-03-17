@@ -216,9 +216,21 @@ private:
 	UPROPERTY(VisibleAnywhere, Category = "Item Properties", meta = (AllowPrivateAccess = "true"))
 	float FresnelRefractFraction;
 
-	// background for this item in the inventory
+	// Background for this item in the inventory
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Inventory, meta = (AllowPrivateAccess = "true"))
 	UTexture2D* IconBackground;
+
+	// The icon for this item in the inventory
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Inventory, meta = (AllowPrivateAccess = "true"))
+	UTexture2D* IconItem;
+
+	// The ammo icon for this item in the inventory
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Inventory, meta = (AllowPrivateAccess = "true"))
+	UTexture2D* AmmoIcon;	
+
+	// Slot in the inventory array
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Inventory, meta = (AllowPrivateAccess = "true"))
+	int32 SlotIndex;
 
 public:
 
@@ -231,6 +243,8 @@ public:
 	FORCEINLINE USoundCue* GetPickupSound() const { return PickupSound; };
 	FORCEINLINE USoundCue* GetEquipSound() const { return EquipSound; };
 	FORCEINLINE int32 GetItemCount() const { return ItemCount; };
+	FORCEINLINE int32 GetSlotIndex() const { return SlotIndex; };
+	FORCEINLINE void SetSlotIndex(int32 Index) { SlotIndex = Index; }; 
 	// Called from the ASHooterCharacter class
 	void StartItemCurve(AShooterCharacter* Char);
 	// Called in AShooter charater GetPickupItem
@@ -238,5 +252,6 @@ public:
 	virtual void EnableCustomDepth();
 	virtual void DisableCustomDepth();
 	void DisableGlowMaterial();
+
 
 };
