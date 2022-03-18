@@ -32,6 +32,8 @@ struct FInterpLocation
 	int32 ItemCount;
 };
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FEquipItemDelegate, int32, CurrentSlotIndex, int32, NewSlotIndex);
+
 UCLASS()
 class SHOOTER_API AShooterCharacter : public ACharacter
 {
@@ -163,6 +165,15 @@ protected:
 	void ResetPickupSoundTimer();
 
 	void ResetEquipSoundTimer();
+
+	void FKeyPressed();
+	void OneKeyPressed();
+	void TwoKeyPressed();
+	void ThreeKeyPressed();
+	void FourKeyPressed();
+	void FiveKeyPressed();
+
+	void ExchangeInventoryItems(int32 CurrentItemIndex, int32 NewItemIndex);
 
 public:	
 	// Called every frame
@@ -421,6 +432,10 @@ private:
 	TArray<AItem*> Inventory;
 
 	const int32 INVENTORY_CAPACITY{6};
+
+	// Delagte for sending slot information to inventory bar when equiping
+	UPROPERTY(BlueprintAssignable, Category = Delegates, meta = (AllowPrivateAccess = "true"))
+	FEquipItemDelegate EquipItemDelegate;
 
 public:
 	// Returns CameraBoom Subobject

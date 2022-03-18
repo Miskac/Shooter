@@ -192,6 +192,7 @@ void AItem::SetItemProperties(EItemState State)
 			// Set Mesh properties
 			ItemMesh->SetSimulatePhysics(true);
 			ItemMesh->SetEnableGravity(true);
+			ItemMesh->SetVisibility(true);
 			ItemMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
 			ItemMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 			ItemMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_WorldStatic, ECollisionResponse::ECR_Block);
@@ -280,7 +281,6 @@ void AItem::FinishInterping()
 		// Subtract 1 from the item count of the interp location struct
 		Character->IncrementInterpLocItemCount(InterpLocIndex, -1);
 		Character->GetPickupItem(this);
-		SetItemState(EItemState::EIS_Pickedup);
 	}
 	// Set scale back to normal
 	SetActorScale3D(FVector(1.f));
