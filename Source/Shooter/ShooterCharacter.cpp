@@ -146,6 +146,7 @@ void AShooterCharacter::BeginPlay()
 	EquippedWeapon->SetSlotIndex(0);
 	EquippedWeapon->DisableCustomDepth();
 	EquippedWeapon->DisableGlowMaterial();
+	EquippedWeapon->SetCharatcer(this);
 
 	InitializeAmmoMap();
 
@@ -554,6 +555,17 @@ void AShooterCharacter::TraceForItems()
 				TraceHitItem->GetPickupWidget()->SetVisibility(true);
 
 				TraceHitItem->EnableCustomDepth();
+
+				if (Inventory.Num() >= INVENTORY_CAPACITY)
+				{
+					// Inventory is full 
+					TraceHitItem->SetCharacterInventoryFull(true);
+				}
+				else 
+				{
+					// Inventory has room 
+					TraceHitItem->SetCharacterInventoryFull(false);
+				}
 			}
 
 			// We hit an AItem last frame 
@@ -636,9 +648,10 @@ void AShooterCharacter::DropWeapon()
 
 void AShooterCharacter::SelectButtonPressed()
 {
+	if (CombatState != ECombatState::ECS_Unoccupied) return;
 	if (TraceHitItem)
 	{
-		TraceHitItem->StartItemCurve(this);
+		TraceHitItem->StartItemCurve(this, true);
 		TraceHitItem = nullptr;
 
 	}
@@ -1108,7 +1121,7 @@ void AShooterCharacter::FiveKeyPressed()
 
 void AShooterCharacter::ExchangeInventoryItems(int32 CurrentItemIndex, int32 NewItemIndex)
 {
-	if ((CurrentItemIndex == NewItemIndex) || (NewItemIndex >= Inventory.Num())) return;
+	if ((CurrentItemIndex == NewItemIndex) || (NewItemIndex >= Inventory.Num()) || (CombatState != ECombatState::ECS_Unoccupied)) return;
 
 	auto OldEquippedWeapon = EquippedWeapon;
 	auto NewWeapon = Cast<AWeapon>(Inventory[NewItemIndex]);
@@ -1116,4 +1129,19 @@ void AShooterCharacter::ExchangeInventoryItems(int32 CurrentItemIndex, int32 New
 	EquipWeapon(NewWeapon);
 	OldEquippedWeapon->SetItemState(EItemState::EIS_Pickedup);
 	NewWeapon->SetItemState(EItemState::EIS_Equipped);
+
+	CombatState = ECombatState::ECS_Equipping;
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (AnimInstance && EquipMontage)
+	{
+		AnimInstance->Montage_Play(EquipMontage, 1.0f);
+		AnimInstance->Montage_JumpToSection(FName("Equip"));
+	}
+
+	NewWeapon->PlayEquipSound(true);
+}
+
+void AShooterCharacter::FinishEquipping()
+{
+	CombatState = ECombatState::ECS_Unoccupied;
 }

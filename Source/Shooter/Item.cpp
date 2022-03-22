@@ -34,7 +34,8 @@ AItem::AItem():
 	FresnelExponent(3.f),
 	FresnelRefractFraction(4.f),
 	PulseCurveTime(5.f),
-	SlotIndex(0)
+	SlotIndex(0),
+	bCharacterInventoryFull(false)
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
@@ -242,7 +243,7 @@ void AItem::SetItemState(EItemState State)
 	SetItemProperties(State);
 }
 
-void AItem::StartItemCurve(AShooterCharacter* Char)
+void AItem::StartItemCurve(AShooterCharacter* Char, bool bForcePlaySound)
 {
 	// Store a handle to the charcter
 	Character = Char;
@@ -252,7 +253,7 @@ void AItem::StartItemCurve(AShooterCharacter* Char)
 	// Add 1 to the item count for this interp location struct
 	Character->IncrementInterpLocItemCount(InterpLocIndex, 1);
 
-	PlayPickupSound();
+	PlayPickupSound(bForcePlaySound);
 	// Store initial location of the item
 	ItemInterpStartLocation = GetActorLocation();
 	bInterping = true;
@@ -357,11 +358,18 @@ FVector AItem::GetInterpLocation()
 	return FVector();
 }
 
-void AItem::PlayPickupSound()
+void AItem::PlayPickupSound(bool bForcePlaySound)
 {
 	if (Character)
 	{
-		if (Character->ShouldPlayPickupSound())
+		if (bForcePlaySound)
+		{
+			if (PickupSound)
+			{
+				UGameplayStatics::PlaySound2D(this, PickupSound);
+			}
+		}
+		else if (Character->ShouldPlayPickupSound())
 		{
 			Character->StartPickupSoundTimer();
 
@@ -373,11 +381,19 @@ void AItem::PlayPickupSound()
 	}
 }
 
-void AItem::PlayEquipSound()
+void AItem::PlayEquipSound(bool bForcePlaySound)
 {
 	if (Character)
 	{
-		if (Character->ShouldPlayEquipSound())
+		if (bForcePlaySound)
+		{
+			if (EquipSound)
+			{
+				UGameplayStatics::PlaySound2D(this, EquipSound);
+			}
+		}
+
+		else if (Character->ShouldPlayEquipSound())
 		{
 			Character->StartEquipSoundTimer();
 

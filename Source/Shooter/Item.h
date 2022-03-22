@@ -75,7 +75,7 @@ protected:
 	// get interp location based on item type
 	FVector GetInterpLocation();
 
-	void PlayPickupSound();
+	void PlayPickupSound(bool bForcePlaySound = false);
 
 	virtual void InitializeCustomDepth();
 
@@ -232,6 +232,10 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Inventory, meta = (AllowPrivateAccess = "true"))
 	int32 SlotIndex;
 
+	// True when the charatcers inventory is full
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Inventory, meta = (AllowPrivateAccess = "true"))
+	bool bCharacterInventoryFull;
+
 public:
 
 	FORCEINLINE UWidgetComponent* GetPickupWidget() const { return PickupWidget; };
@@ -245,10 +249,12 @@ public:
 	FORCEINLINE int32 GetItemCount() const { return ItemCount; };
 	FORCEINLINE int32 GetSlotIndex() const { return SlotIndex; };
 	FORCEINLINE void SetSlotIndex(int32 Index) { SlotIndex = Index; }; 
+	FORCEINLINE void SetCharatcer(AShooterCharacter* Char) { Character = Char; };
+	FORCEINLINE void SetCharacterInventoryFull(bool bFull) { bCharacterInventoryFull = bFull; };
 	// Called from the ASHooterCharacter class
-	void StartItemCurve(AShooterCharacter* Char);
+	void StartItemCurve(AShooterCharacter* Char, bool bForcePlaySound = false);
 	// Called in AShooter charater GetPickupItem
-	void PlayEquipSound();
+	void PlayEquipSound(bool bForcePlaySound = false);
 	virtual void EnableCustomDepth();
 	virtual void DisableCustomDepth();
 	void DisableGlowMaterial();
