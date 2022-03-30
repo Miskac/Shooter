@@ -80,3 +80,41 @@ bool AWeapon::ClipIsFull()
 {
     return Ammo >= MagazineCapacity;
 }
+
+void AWeapon::OnConstruction(const FTransform& Transform)
+{
+    Super::OnConstruction(Transform);
+    
+    FString const WeaponTablePath {TEXT("DataTable'/Game/_Game/DataTables/WeaponDataTable.WeaponDataTable'")};
+
+    UDataTable* WeapontableObject = Cast<UDataTable>(StaticLoadObject(UDataTable::StaticClass(), nullptr, *WeaponTablePath));
+
+    if (WeapontableObject)
+    {
+        FWeaponDataTable* WeaponDataRow = nullptr;
+
+        switch (WeaponType)
+        {
+            case EWeaponType::EWT_SubmachineGun:
+            WeaponDataRow = WeapontableObject->FindRow<FWeaponDataTable>(FName("Submachinegun"), TEXT(""));
+                break;
+            case EWeaponType::EWT_AssaultRifle:
+            WeaponDataRow = WeapontableObject->FindRow<FWeaponDataTable>(FName("AssultRifle"), TEXT(""));
+                break;
+        }
+
+        if (WeaponDataRow)
+        {
+            AmmoType = WeaponDataRow->AmmoType;
+            Ammo = WeaponDataRow->WeaponAmmo;
+            MagazineCapacity = WeaponDataRow->MagazineCapacity;
+            SetPickupSound(WeaponDataRow->PickupSound);
+            SetEquipSound(WeaponDataRow->EquipSound);
+            GetItemMesh()->SetSkeletalMesh(WeaponDataRow->ItemMesh);
+            SetItemName(WeaponDataRow->ItemName);
+            SetIconItem(WeaponDataRow->InventoryIcon);
+            SetAmmoIcon(WeaponDataRow->AmmoIcon);
+        }
+    }
+
+}
