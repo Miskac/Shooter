@@ -119,6 +119,8 @@ void AWeapon::OnConstruction(const FTransform& Transform)
             PreviusMaterialIndex = GetMaterialIndex();
             GetItemMesh()->SetMaterial(PreviusMaterialIndex, nullptr);
             SetMaterialIndex(WeaponDataRow->MaterialIndex);
+            SetClipBoneName(WeaponDataRow->ClipBoneName);
+            SetReloadMontageSection(WeaponDataRow->ReloadMontageSection);
         }
 
         if (GetMaterialInstance())
