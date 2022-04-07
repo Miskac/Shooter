@@ -81,6 +81,16 @@ bool AWeapon::ClipIsFull()
     return Ammo >= MagazineCapacity;
 }
 
+void AWeapon::BeginPlay()
+{
+    Super::BeginPlay();
+
+    if (BoneToHide != FName(""))
+    {
+        GetItemMesh()->HideBoneByName(BoneToHide, EPhysBodyOp::PBO_None);
+    }
+}
+
 void AWeapon::OnConstruction(const FTransform& Transform)
 {
     Super::OnConstruction(Transform);
@@ -100,6 +110,9 @@ void AWeapon::OnConstruction(const FTransform& Transform)
                 break;
             case EWeaponType::EWT_AssaultRifle:
             WeaponDataRow = WeapontableObject->FindRow<FWeaponDataTable>(FName("AssultRifle"), TEXT(""));
+                break;
+            case EWeaponType::EWT_Pistol:
+            WeaponDataRow = WeapontableObject->FindRow<FWeaponDataTable>(FName("Pistol"), TEXT(""));
                 break;
         }
 
@@ -131,6 +144,8 @@ void AWeapon::OnConstruction(const FTransform& Transform)
             AutoFireRate = WeaponDataRow->AutoFireRate;
             MuzzleFlash = WeaponDataRow->MuzzleFlash;
             FireSound = WeaponDataRow->FireSound;
+            BoneToHide = WeaponDataRow->BoneToHide;
+            
 
         }
 
