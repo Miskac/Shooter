@@ -179,6 +179,14 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Data Table", meta = (AllowPrivateAccess = "true"))
 	FName BoneToHide;
 
+	// Amount that the slide is pushed back during pistol fire
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Pistol", meta = (AllowPrivateAccess = "true"))
+	float SlideDisplacement;
+
+	// Curve for the slide displacement
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Pistol", meta = (AllowPrivateAccess = "true"))
+	UCurveFloat* SlideDisplacementCurve;
+
 public:
 	// Adds an impulse to the waepon
 	void ThrowWeapon();
