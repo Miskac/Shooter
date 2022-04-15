@@ -84,6 +84,9 @@ struct FWeaponDataTable: public FTableRowBase
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FName BoneToHide;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool bAutomatic;
 };
 
 /**
@@ -107,6 +110,10 @@ protected:
 	virtual void OnConstruction(const FTransform& Transform) override;
 
 	virtual void BeginPlay() override;
+
+	void FinishMovingSlide();
+
+	void UpdateSlideDisplacement();
 
 private:
 
@@ -187,6 +194,33 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Pistol", meta = (AllowPrivateAccess = "true"))
 	UCurveFloat* SlideDisplacementCurve;
 
+	//Timer handle for updating slide displacement
+	FTimerHandle SlideTimer;
+
+	// Time for displacing slide during pistol fire
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Pistol", meta = (AllowPrivateAccess = "true"))
+	float SlideDisplacementTime;
+
+	// True when moving the pistol slide
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Pistol", meta = (AllowPrivateAccess = "true"))
+	bool bMovingSlide;
+
+	// Max distance for the slide on the pistol
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Pistol", meta = (AllowPrivateAccess = "true"))
+	float MaxSlideDisplacement;
+
+	// Max rotation for pistol recoil
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Pistol", meta = (AllowPrivateAccess = "true"))
+	float MaxRecoilRotation;
+
+	// Amount that the pistol will rotate during pistol fire
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Pistol", meta = (AllowPrivateAccess = "true"))
+	float RecoilRotation;
+
+	// True for auto gunfire
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Properties", meta = (AllowPrivateAccess = "true"))
+	bool bAutomatic;
+
 public:
 	// Adds an impulse to the waepon
 	void ThrowWeapon();
@@ -211,6 +245,9 @@ public:
 	FORCEINLINE float GetAutoFirerate() const { return AutoFireRate; };
 	FORCEINLINE UParticleSystem* GetMuzzleFlash() const { return MuzzleFlash; };
 	FORCEINLINE USoundCue* GetFireSound() const { return FireSound; };
+	FORCEINLINE bool GetAutomatic() const { return bAutomatic; };
 
 	bool ClipIsFull();
+
+	void StartSlideTimer();
 };
